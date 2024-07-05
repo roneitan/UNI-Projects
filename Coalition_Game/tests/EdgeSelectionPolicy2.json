@@ -1,0 +1,42 @@
+{
+  "parties": [
+    {
+      "name": "a",
+      "mandates": 10,
+      "join_policy": "L"
+    },
+    {
+      "name": "b",
+      "mandates": 10,
+      "join_policy": "L"
+    },
+    {
+      "name": "c",
+      "mandates": 10,
+      "join_policy": "L"
+    },
+    {
+      "name": "d",
+      "mandates": 10,
+      "join_policy": "L"
+    },
+    {
+      "name": "e",
+      "mandates": 80,
+      "join_policy": "L"
+    }
+  ],
+  "graph": [
+    [0, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0]
+  ],
+  "agents": [
+    {
+      "party_id": 0,
+      "selection_policy": "E"
+    }
+  ]
+}
