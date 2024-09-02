@@ -1,0 +1,23 @@
+/* SearchUsers.css */
+
+/* Search bar style */
+.search-bar {
+    margin-top: 50px; /* Adjust this value to move the search bar lower */
+    margin-bottom: 20px;
+    text-align: center; /* Optional: Center align the search bar */
+  }
+  
+  .search-input {
+    width: 50%; /* Reduced width */
+    padding: 8px; /* Reduced padding */
+    font-size: 14px; /* Reduced font size */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    color: #1d2129; /* Dark text color */
+  }
+  
+  .search-input:focus {
+    outline: none;
+    border-color: #f57c00; /* Orange color on focus */
+  }
+  

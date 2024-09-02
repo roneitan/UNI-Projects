@@ -1,0 +1,52 @@
+/* src/Toolbar.css */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.toolbar-container {
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000; /* Ensure it is on top */
+}
+
+.toolbar {
+  display: flex;
+  justify-content: center; /* Center items horizontally */
+  align-items: center; /* Center items vertically */
+  background-color: orange; /* Change background color to orange */
+  padding: 15px;
+}
+
+.toolbar a {
+  text-decoration: none;
+  color: white;
+  font-size: 20px; /* Increase the font size */
+  margin: 0 15px; /* Add some spacing between links */
+}
+
+.toolbar a.current-page {
+  pointer-events: none; /* Disable click on the current page link */
+  background: none; /* Remove background color */
+}
+
+.toolbar-button {
+  background-color: orange;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin: 0 5px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.toolbar-button:hover {
+  background-color: rgb(238, 122, 5);
+}
+
+.active {
+  font-weight: bold;
+}

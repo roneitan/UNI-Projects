@@ -1,0 +1,118 @@
+/* profile.css */
+
+/* General styling for the profile section */
+.gradient-custom {
+  background: linear-gradient(to right, white, white );
+  min-height: 100vh;
+}
+
+/* Styling for the back button */
+.gradient-custom button {
+  margin: 20px;
+  padding: 10px 20px;
+  background-color: rgb(241, 233, 217);
+  color: rgb(241, 233, 217);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.gradient-custom button:hover {
+  background-color: rgb(241, 233, 217); /* Slightly darker orange on hover */
+}
+
+/* Container styling for the profile details */
+.profile-container {
+  margin: 20px auto;
+  padding: 20px;
+  max-width: 600px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+}
+
+/* Styling for the name and avatar section */
+.profile-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.profile-avatar img {
+  width: 80px;
+  height: auto;
+  border-radius: 50%;
+}
+
+/* Styling for the user information section */
+.profile-info {
+  padding: 20px;
+}
+
+.profile-info h5 {
+  color: #f57c00; /* Orange color for headings */
+  font-size: 24px; /* Adjusted font size */
+  margin-bottom: 10px;
+}
+
+.profile-info p {
+  margin-bottom: 10px;
+  font-size: 16px; /* Adjusted font size */
+}
+
+/* Styling for the friends list section */
+.friends-list {
+  margin-top: 20px;
+}
+
+.friends-list ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.friends-list ul li {
+  margin-bottom: 10px;
+  font-size: 16px; /* Adjusted font size */
+}
+
+/* Styling for the action buttons section */
+.action-buttons {
+  margin-top: 20px;
+}
+
+.action-buttons button {
+  padding: 10px 20px;
+  margin-right: 10px;
+  background-color: #f57c00;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.action-buttons button:hover {
+  background-color: rgb(241, 233, 217); /* Slightly darker orange on hover */
+}
+
+.button-custom {
+  background-color: #000;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.button-custom:hover {
+  background-color: #333;
+}

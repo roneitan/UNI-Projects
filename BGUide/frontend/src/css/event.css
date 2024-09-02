@@ -1,0 +1,97 @@
+/* event.css */
+
+/* Container styling for the event details */
+.event-container {
+  margin: 20px auto;
+  padding: 20px;
+  max-width: 600px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  background-color: rgb(241, 233, 217); /* Match background color with explorer page */
+}
+
+/* Heading styling for event details */
+.event-container h1 {
+  text-align: center;
+  color: #f57c00; /* Orange color for heading */
+  margin-bottom: 20px;
+  font-size: 36px; /* Adjusted font size */
+  font-weight: bold;
+}
+
+/* Styling for each detail in the event */
+.event-detail {
+  margin: 10px 0;
+}
+
+/* Styling for the strong element in the event detail */
+.event-detail strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #f57c00; /* Orange color for labels */
+  font-size: 18px; /* Adjusted font size */
+}
+
+/* Styling for the paragraph in the event detail */
+.event-detail p {
+  margin: 0;
+  padding: 8px;
+  background-color: rgb(241, 233, 217); /* White background */
+  border-radius: 5px;
+  color: #333; /* Dark text color */
+  font-size: 16px; /* Adjusted font size */
+}
+
+/* Styling for links in the event detail */
+.event-detail a {
+  color: #1a73e8; /* Blue color for links */
+  text-decoration: none;
+}
+
+.event-detail a:hover {
+  text-decoration: underline;
+}
+
+/* Button styling for edit action */
+.btn-edit {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin-right: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px; /* Adjusted font size */
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.btn-edit:hover {
+  background-color: #45a049; /* Slightly darker green on hover */
+}
+
+/* Button styling for delete action */
+.btn-delete {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px; /* Adjusted font size */
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.btn-delete:hover {
+  background-color: #e53935; /* Slightly darker red on hover */
+}
+
+/* Container for action buttons */
+.event-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center; /* Center align the buttons */
+}
+

@@ -1,0 +1,133 @@
+/* Main container for the login page */
+.login-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image: url('../../public/party.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+
+/* Popup styling for the login form */
+.login-popup {
+    width: 400px;
+    padding: 20px;
+    background-color: rgba(255, 248, 240, 0.95); /* Light orange background */
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(255, 140, 0, 0.2);
+    position: relative;
+    z-index: 1000;
+}
+
+/* Overlay styling */
+.login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 140, 0, 0.3); /* Semi-transparent orange background */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+/* Avatar and form styling */
+.login-avatar {
+    margin: 10px auto;
+    background-color: #FF8C00; /* Dark orange background for avatar */
+}
+
+/* Form styling */
+.login-form {
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* Input field styling */
+.login-input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 2px solid #FF8C00; /* Dark orange border */
+    border-radius: 8px;
+    font-size: 18px;
+    color: #FF8C00; /* Dark orange text color */
+    box-sizing: border-box;
+    background-color: rgba(255, 248, 240, 0.7); /* Light orange background */
+}
+
+.login-input:focus {
+    outline: none;
+    border-color: #FF4500; /* Reddish orange on focus */
+    box-shadow: 0 0 5px rgba(255, 140, 0, 0.5);
+}
+
+/* Error message styling */
+.error-message {
+    color: #FF4500; /* Reddish orange for errors */
+    font-size: 14px;
+}
+
+/* Button styling */
+.login-button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 20px;
+    background-color: orange; /* Orange background */
+    color: white; /* White text */
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.login-button:hover {
+    background-color: #e67e22; /* Lighter shade of orange on hover */
+}
+
+/* Link styling */
+.login-link {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.login-link a {
+    color: #FF8C00; /* Dark orange text */
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.login-link a:hover {
+    color: #FF4500; /* Reddish orange on hover */
+}
+
+/* Typography styling */
+.login-title {
+    font-size: 32px;
+    font-weight: bold;
+    color: #FF8C00; /* Dark orange text */
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Headline styling */
+.login-headline {
+    font-size: 40px;
+    font-weight: bold;
+    color: #FF8C00; /* Dark orange text */
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/* Copyright text styling */
+.login-copyright {
+    margin-top: 20px;
+    text-align: center;
+    color: #FFA500; /* Orange text */
+}

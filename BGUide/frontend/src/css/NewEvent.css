@@ -1,0 +1,253 @@
+/* event.css */
+
+/* General styling for the form */
+.event-form {
+    margin: 20px auto;
+    padding: 20px;
+    max-width: 600px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+  }
+  
+  .event-form .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .event-form label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #f57c00; /* Orange color for labels */
+    font-size: 18px; /* Adjusted font size */
+  }
+  
+  .event-form input[type="text"],
+  .event-form input[type="checkbox"],
+  .event-form .react-datepicker-wrapper,
+  .event-form .MuiTextField-root {
+    width: 100%;
+  }
+  
+  .event-form input[type="text"] {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 20px;
+  }
+  
+  .event-form input[type="checkbox"] {
+    width: auto;
+    margin-right: 10px;
+  }
+  
+  .event-form button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .event-form button[type="submit"] {
+    background-color: #4CAF50;
+    color: white;
+    margin-top: 20px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+  }
+  
+  .event-form button[type="submit"]:hover {
+    background-color: #45a049; /* Slightly darker green on hover */
+  }
+  
+  .event-form button[type="button"] {
+    background-color: #f57c00;
+    color: white;
+    margin-top: 10px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+  }
+  
+  .event-form button[type="button"]:hover {
+    background-color: #f57c00; /* Slightly darker blue on hover */
+  }
+  
+  .event-form .lineup-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1px;
+  }
+  
+  .event-form .lineup-item input[type="text"] {
+    flex: 1;
+    margin-right: 10px;
+  }
+  
+  
+  .event-form .map-container {
+    height: 300px;
+    width: 100%;
+    margin-top: 1px;
+  }
+ 
+  .event-form {
+    display: flex;
+    flex-direction: column;
+    gap: 30px; /* Space between fields */
+    max-width: 600px;
+    margin: auto;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1px; /* Space between input and button */
+  }
+  
+  .lineup-item,
+  .payment-link-item,
+  .artist-item,
+  .description-item {
+    display: flex;
+    gap: 1px; /* Space between input and remove button */
+    align-items: center;
+  }
+  
+  .add-artist-btn,
+  .add-payment-link-btn,
+  .add-description-btn,
+  .remove-artist-btn,
+  .remove-payment-link-btn,
+  .remove-description-btn {
+    margin-top: 10px; /* Adjust the top margin for buttons */
+  }
+  /* src/css/NewEvent.css */
+  .error-message {
+    color: red;
+    margin-bottom: 10px;
+  }
+
+  .warning-message {
+    color: orange;
+    margin-top: 5px;
+}
+
+/* Common styles for all input fields */
+.event-form input[type="text"],
+.event-form input[type="checkbox"],
+.event-form textarea,
+.event-form .react-datepicker-wrapper {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+/* Specific styles for the textarea to make it look consistent */
+.event-form textarea {
+  height: 100px; /* Adjust this as needed */
+  resize: vertical; /* Allows users to resize vertically */
+}
+
+/* Optional: Style the labels similarly */
+.event-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+/* Style for the submit button */
+.event-form button[type="submit"] {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.event-form button[type="submit"]:hover {
+  background-color: #0056b3;
+}
+/* Common styles for all input fields, including lineup and description */
+.event-form input[type="text"],
+.event-form input[type="checkbox"],
+.event-form textarea,
+.event-form .lineup-item input,
+.event-form .payment-link-item input,
+.event-form .react-datepicker-wrapper {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-family: 'Arial', sans-serif; /* Apply the same font */
+  font-size: 14px; /* Adjust as needed */
+}
+
+/* Specific styles for the textarea to make it look consistent */
+.event-form textarea {
+  height: 100px; /* Adjust this as needed */
+  resize: vertical; /* Allows users to resize vertically */
+}
+
+/* Optional: Style the labels similarly */
+.event-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-family: 'Arial', sans-serif; /* Apply the same font */
+}
+
+/* Style for the submit button */
+.event-form button[type="submit"] {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: 'Arial', sans-serif; /* Apply the same font */
+}
+
+.event-form button[type="submit"]:hover {
+  background-color: #0056b3;
+}
+
+/* Remove the box wrapping around the date picker */
+.event-form .react-datepicker-wrapper {
+  display: inline-block; /* Adjusts the display to inline */
+  width: 100%; /* Make the wrapper full width */
+  margin: 0; /* Remove any extra margin */
+  padding: 0; /* Remove any extra padding */
+  border: none; /* Remove any border */
+  box-shadow: none; /* Remove any shadow */
+}
+
+/* Remove unnecessary styles from the input container */
+.event-form .react-datepicker__input-container {
+  display: inline-block; /* Same as wrapper */
+  width: 100%; /* Content determines width */
+}
+/* Ensure the input inside the DatePicker takes full width */
+.event-form .react-datepicker-wrapper input[type="text"] {
+  width: 100%; /* Full width inside its container */
+  padding: 10px; /* Keep consistent padding */
+  margin-bottom: 10px; /* Maintain the same bottom margin */
+  border-radius: 5px; /* Keep rounded corners */
+  border: 1px solid #ccc; /* Standard border */
+  box-sizing: border-box; /* Ensure consistent box model */
+  font-size: 14px; /* Match the font size with others */
+}
+
+
+
+  
+
+  
+  
