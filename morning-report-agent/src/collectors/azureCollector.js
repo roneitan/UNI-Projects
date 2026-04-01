@@ -1,150 +1,96 @@
-'use strict';
+import 'dotenv/config';
+import fse from 'fs-extra';
+import { join, resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { format, subDays } from 'date-fns';
 
-require('dotenv').config();
-const fse = require('fs-extra');
-const path = require('path');
-const { format, subDays } = require('date-fns');
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// TODO(Azure MCP): Once you confirm the exact MCP server package, install it and
-// uncomment the imports below. The collector connects to the Azure DevOps MCP
-// server as an MCP client over stdio transport.
+// ─── Azure DevOps MCP tool names (confirmed from @azure-devops/mcp manifest) ──
+// These are called by the Claude agent via the injected MCP server, not directly
+// from this module. This file handles the pre-agent data collection only.
 //
-// const { Client } = require('@modelcontextprotocol/sdk/client/index.js');
-// const { StdioClientTransport } = require('@modelcontextprotocol/sdk/client/stdio.js');
+// mcp_ado_pipelines_get_builds           – filter by definition name + date range
+// mcp_ado_pipelines_list_build_definitions – look up definition ID from name
+// mcp_ado_testplan_show_test_results_from_build_id – test results per build
 
 /**
- * Spawn the Azure DevOps MCP server and return a connected MCP client.
+ * Collect test results for a single service from Azure DevOps.
  *
- * The server command is read from AZURE_DEVOPS_MCP_CMD in .env.
- * Auth credentials are passed to the server as environment variables so
- * that no secrets are ever hardcoded.
+ * The Claude agent receives the raw JSON here and can also call Azure DevOps
+ * MCP tools itself during analysis for additional context.
  *
- * @returns {Promise<import('@modelcontextprotocol/sdk/client/index.js').Client>}
+ * @param {import('../../services/base.schema.js').Service} service
+ * @param {Date} date  - The date of the cron run; we query the previous calendar day
+ * @returns {Promise<object>} Raw results object (also written to disk)
  */
-async function createMcpClient() {
-  // TODO(Azure MCP): Uncomment and test once the MCP server package is confirmed.
-  //
-  // const [cmd, ...args] = process.env.AZURE_DEVOPS_MCP_CMD.split(' ');
-  // const transport = new StdioClientTransport({
-  //   command: cmd,
-  //   args,
-  //   env: {
-  //     ...process.env,
-  //     AZURE_DEVOPS_PAT:     process.env.AZURE_DEVOPS_PAT,
-  //     AZURE_DEVOPS_ORG_URL: process.env.AZURE_DEVOPS_ORG_URL,
-  //     AZURE_DEVOPS_PROJECT: process.env.AZURE_DEVOPS_PROJECT,
-  //   },
-  // });
-  // const client = new Client({ name: 'morning-report-agent', version: '1.0.0' });
-  // await client.connect(transport);
-  // return client;
-
-  // Stub until MCP wired up
-  return null;
-}
-
-/**
- * Fetch test results from Azure DevOps for all services on a given date.
- *
- * Collects the *previous* calendar day's pipeline runs (the 02:00 job queries
- * yesterday). Writes each service result to:
- *   ./results/YYYY-MM-DD/<service-name>.json
- *
- * @param {Date} date - Usually `new Date()` called at 02:00 — we query yesterday.
- * @returns {Promise<Array<{ serviceName: string, results: object }>>}
- */
-async function collectResults(date) {
+export async function collectForService(service, date) {
   const yesterday = subDays(date, 1);
   const dateStr = format(yesterday, 'yyyy-MM-dd');
-  const services = parseServices();
+  const project = service.pipeline.project ?? process.env.AZURE_DEVOPS_PROJECT;
 
-  console.log(`[azureCollector] Collecting results for ${dateStr} — services: ${services.join(', ')}`);
+  console.log(`[azureCollector] Collecting ${service.id} — pipeline: "${service.pipeline.name}" — date: ${dateStr}`);
 
-  const mcpClient = await createMcpClient();
+  // TODO(Azure MCP): Replace stub below with direct Azure DevOps REST API calls
+  // to pre-fetch the test run summary before the Claude agent starts.
+  //
+  // Recommended approach using axios + ADO_MCP_AUTH_TOKEN:
+  //
+  //   const orgUrl = `https://dev.azure.com/${process.env.AZURE_DEVOPS_ORG_NAME}`;
+  //   const auth = { username: '', password: process.env.ADO_MCP_AUTH_TOKEN };
+  //
+  //   Step 1 — get build definition ID by pipeline name:
+  //   GET {orgUrl}/{project}/_apis/build/definitions?name={pipeline.name}&api-version=7.1
+  //
+  //   Step 2 — list builds for yesterday:
+  //   GET {orgUrl}/{project}/_apis/build/builds
+  //     ?definitions={definitionId}&minTime={dateStr}T00:00:00Z&maxTime={dateStr}T23:59:59Z
+  //     &api-version=7.1
+  //
+  //   Step 3 — for each build, get test results:
+  //   GET {orgUrl}/{project}/_apis/test/runs?buildId={buildId}&api-version=7.1
+  //   GET {orgUrl}/{project}/_apis/test/runs/{runId}/results?api-version=7.1
+  //
+  // The Claude agent can then supplement this with MCP tool calls for deeper context.
+
+  const rawResults = {
+    collectedAt: new Date().toISOString(),
+    serviceId: service.id,
+    pipelineName: service.pipeline.name,
+    project,
+    date: dateStr,
+    runs: [],                                          // TODO: fill from ADO API
+    summary: { total: 0, passed: 0, failed: 0, skipped: 0 }, // TODO: fill from ADO API
+  };
+
+  const outDir = resolve(__dirname, '../../results', dateStr);
+  const outFile = join(outDir, `${service.id}.json`);
+  await fse.ensureDir(outDir);
+  await fse.writeJson(outFile, rawResults, { spaces: 2 });
+
+  console.log(`[azureCollector] Saved ${outFile}`);
+  return rawResults;
+}
+
+/**
+ * Collect results for all services (used by the cron job directly for a
+ * full-night run outside of the orchestrator, e.g. `npm run collect`).
+ *
+ * @param {Date} date
+ * @returns {Promise<Array<{ service: object, results: object }>>}
+ */
+export async function collectResults(date) {
+  const { loadAll } = await import('../../services/registry.js');
+  const services = await loadAll();
 
   const collected = [];
-
-  for (const serviceName of services) {
-    console.log(`[azureCollector]   → Fetching: ${serviceName}`);
+  for (const service of services) {
     try {
-      const rawResults = await fetchServiceResults(serviceName, dateStr, mcpClient);
-
-      const outDir = path.resolve(__dirname, '../../results', dateStr);
-      const outFile = path.join(outDir, `${serviceName}.json`);
-      await fse.ensureDir(outDir);
-      await fse.writeJson(outFile, rawResults, { spaces: 2 });
-
-      console.log(`[azureCollector]   ✓ Saved ${outFile}`);
-      collected.push({ serviceName, results: rawResults });
+      const results = await collectForService(service, date);
+      collected.push({ service, results });
     } catch (err) {
-      console.error(`[azureCollector]   ✗ Failed for ${serviceName}:`, err.message);
-      // Continue — one failing service must not block the others
+      console.error(`[azureCollector] Failed for ${service.id}:`, err.message);
     }
   }
-
-  // TODO(Azure MCP): Close the MCP client connection after all fetches complete.
-  // if (mcpClient) await mcpClient.close();
-
   return collected;
 }
-
-/**
- * Fetch results for one service (one pipeline definition) via the MCP client.
- *
- * @param {string} serviceName - Pipeline definition name in Azure DevOps
- * @param {string} dateStr     - 'YYYY-MM-DD' — the day to query
- * @param {object|null} mcpClient - Connected MCP client (null when stubbed)
- * @returns {Promise<object>}
- */
-async function fetchServiceResults(serviceName, dateStr, mcpClient) {
-  // TODO(Azure MCP): Replace stub with real MCP tool calls.
-  //
-  // The Azure DevOps MCP server exposes tools such as:
-  //   - list_pipeline_runs  (filter by definition name + date range)
-  //   - get_test_results    (for a specific run ID)
-  //
-  // Example sketch (confirm exact tool names from the MCP server's manifest):
-  //
-  // const runsResponse = await mcpClient.callTool('list_pipeline_runs', {
-  //   organization: process.env.AZURE_DEVOPS_ORG_URL,
-  //   project:      process.env.AZURE_DEVOPS_PROJECT,
-  //   pipelineName: serviceName,
-  //   minDate:      `${dateStr}T00:00:00Z`,
-  //   maxDate:      `${dateStr}T23:59:59Z`,
-  // });
-  //
-  // const runs = runsResponse.content ?? [];
-  // const testResults = await Promise.all(
-  //   runs.map(run =>
-  //     mcpClient.callTool('get_test_results', {
-  //       organization: process.env.AZURE_DEVOPS_ORG_URL,
-  //       project:      process.env.AZURE_DEVOPS_PROJECT,
-  //       runId:        run.id,
-  //     })
-  //   )
-  // );
-  //
-  // return buildResultShape(serviceName, dateStr, runs, testResults);
-
-  // ── STUB — returns empty data until MCP is wired ──────────────────────────
-  console.log(`[azureCollector]     (stub) No real Azure call yet for "${serviceName}"`);
-  return {
-    collectedAt: new Date().toISOString(),
-    service: serviceName,
-    date: dateStr,
-    runs: [],
-    summary: { total: 0, passed: 0, failed: 0, skipped: 0 },
-  };
-}
-
-/**
- * Read SERVICES env var into an array.
- * Falls back to ['placeholder-service'] so the loop always runs during dev/testing.
- */
-function parseServices() {
-  const raw = process.env.SERVICES || '';
-  const list = raw.split(',').map(s => s.trim()).filter(Boolean);
-  return list.length ? list : ['placeholder-service'];
-}
-
-module.exports = { collectResults };

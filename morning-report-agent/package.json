@@ -1,7 +1,8 @@
 {
   "name": "morning-report-agent",
   "version": "1.0.0",
-  "description": "Nightly Azure DevOps test result collector + Claude AI analyzer + Slack morning reporter",
+  "description": "Nightly Azure DevOps test result collector + Claude AI analyzer + Teams morning reporter",
+  "type": "module",
   "main": "cron.js",
   "engines": {
     "node": ">=20.0.0"
@@ -9,16 +10,19 @@
   "scripts": {
     "start": "node cron.js",
     "dev": "node --watch cron.js",
-    "collect": "node -e \"require('./src/collectors/azureCollector').collectResults(new Date())\""
+    "validate": "node -e \"import('./services/registry.js').then(m => m.loadAll().then(s => console.log('Services:', s.map(x => x.id))))\"",
+    "collect": "node -e \"import('./src/collectors/azureCollector.js').then(m => m.collectResults(new Date()))\""
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
-    "@modelcontextprotocol/sdk": "^1.10.2",
+    "@anthropic-ai/claude-agent-sdk": "^0.2.89",
     "axios": "^1.7.9",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "fs-extra": "^11.2.0",
-    "node-cron": "^3.0.3"
+    "node-cron": "^3.0.3",
+    "p-limit": "^6.1.0",
+    "simple-git": "^3.27.0",
+    "zod": "^4.0.0"
   },
   "license": "ISC"
 }
