@@ -1,0 +1,10 @@
+# Runtime outputs — never commit
+results/
+reports/
+
+# Secrets
+.env
+
+# Node
+node_modules/
+npm-debug.log*

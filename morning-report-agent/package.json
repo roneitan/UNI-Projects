@@ -1,0 +1,24 @@
+{
+  "name": "morning-report-agent",
+  "version": "1.0.0",
+  "description": "Nightly Azure DevOps test result collector + Claude AI analyzer + Slack morning reporter",
+  "main": "cron.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node cron.js",
+    "dev": "node --watch cron.js",
+    "collect": "node -e \"require('./src/collectors/azureCollector').collectResults(new Date())\""
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@modelcontextprotocol/sdk": "^1.10.2",
+    "axios": "^1.7.9",
+    "date-fns": "^4.1.0",
+    "dotenv": "^16.4.7",
+    "fs-extra": "^11.2.0",
+    "node-cron": "^3.0.3"
+  },
+  "license": "ISC"
+}
