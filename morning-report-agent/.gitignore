@@ -3,6 +3,7 @@ results/
 reports/
 repos/
 workspaces/
+coverage/
 
 # Secrets
 .env
