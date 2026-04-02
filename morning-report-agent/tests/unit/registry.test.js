@@ -40,7 +40,7 @@ describe('ServiceSchema validation', () => {
     };
     const result = ServiceSchema.safeParse(minimal);
     expect(result.success).toBe(true);
-    expect(result.data.agent.model).toBe('claude-sonnet-4-20250514');
+    expect(result.data.agent.model).toBeNull(); // null = runner picks its own default
     expect(result.data.agent.maxTurns).toBe(15);
     expect(result.data.agent.maxBudgetUsd).toBe(0.5);
     expect(result.data.agent.createFixBranch).toBe(false);

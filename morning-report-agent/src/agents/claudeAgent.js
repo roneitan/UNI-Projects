@@ -8,16 +8,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const BASE_PROMPT = readFileSync(join(__dirname, 'prompts/base-analysis.md'), 'utf-8');
 
 /**
- * Run a Claude Code agent to analyse test failures for a single service.
+ * Route a service analysis run to the correct provider runner.
  *
- * When service.agent.createFixBranch is false:
- *   - Tools: Read, Glob, Grep (read-only)
- *   - isolation: 'worktree' — SDK creates a temporary worktree, discards after
- *
- * When service.agent.createFixBranch is true:
- *   - Tools: Read, Glob, Grep, Write, Edit
- *   - cwd is the fix-branch worktree we created in gitSync
- *   - No SDK isolation (we own the worktree lifecycle)
+ * provider = 'claude' → src/agents/runners/claudeRunner.js  (default)
+ * provider = 'openai' → src/agents/runners/codexRunner.js
  *
  * @param {import('../../services/base.schema.js').Service} service
  * @param {object} testResults   - Raw JSON from azureCollector
@@ -26,67 +20,23 @@ const BASE_PROMPT = readFileSync(join(__dirname, 'prompts/base-analysis.md'), 'u
  * @returns {Promise<object>} Parsed structured result from the agent
  */
 export async function analyze(service, testResults, repoPaths, date) {
-  // Dynamic import — @anthropic-ai/claude-agent-sdk is ESM
-  const { query } = await import('@anthropic-ai/claude-agent-sdk');
+  const provider = service.agent.provider ?? 'claude';
+  const runner = provider === 'openai'
+    ? await import('./runners/codexRunner.js')
+    : await import('./runners/claudeRunner.js');
 
   const dateStr = format(date, 'yyyy-MM-dd');
   const prompt = buildPrompt(service, testResults);
 
-  const allowedTools = ['Read', 'Glob', 'Grep'];
-  if (service.agent.createFixBranch) {
-    allowedTools.push('Write', 'Edit');
-  }
+  console.log(`[claudeAgent] Starting analysis: ${service.displayName} (provider: ${provider})`);
 
-  const options = {
-    cwd: repoPaths.automation,
-    additionalDirectories: repoPaths.service ? [repoPaths.service] : [],
-    allowedTools,
-    disallowedTools: ['Bash', 'WebFetch', 'WebSearch'],
-    permissionMode: 'bypassPermissions',
-    persistSession: false,
+  const { fullText, costUsd } = await runner.run(prompt, repoPaths, {
     model: service.agent.model,
     maxTurns: service.agent.maxTurns,
     maxBudgetUsd: service.agent.maxBudgetUsd,
-    mcpServers: {
-      'azure-devops': {
-        command: 'npx',
-        args: [
-          '-y', '@azure-devops/mcp',
-          process.env.AZURE_DEVOPS_ORG_NAME,
-          '--authentication', 'envvar',
-          // Load only the domains we need — reduces startup time
-          '-d', 'pipelines', 'test-plans',
-        ],
-        env: { ADO_MCP_AUTH_TOKEN: process.env.ADO_MCP_AUTH_TOKEN },
-      },
-    },
-  };
+    createFixBranch: service.agent.createFixBranch,
+  });
 
-  // Only ask the SDK to manage worktree isolation for read-only runs.
-  // For fix-branch runs we already have our own worktree as `cwd`.
-  if (repoPaths.useWorktreeIsolation) {
-    options.isolation = 'worktree';
-  }
-
-  console.log(`[claudeAgent] Starting analysis: ${service.displayName} (${service.agent.model})`);
-
-  const textChunks = [];
-  let costUsd = null;
-
-  for await (const msg of query({ prompt, options })) {
-    if (msg.type === 'assistant') {
-      const text = msg.message?.content
-        ?.filter(c => c.type === 'text')
-        .map(c => c.text)
-        .join('') ?? '';
-      if (text) textChunks.push(text);
-    }
-    if (msg.type === 'result') {
-      costUsd = msg.total_cost_usd ?? null;
-    }
-  }
-
-  const fullText = textChunks.join('\n');
   const structured = extractJson(fullText);
 
   // ── Persist results ─────────────────────────────────────────────────────────
@@ -101,6 +51,7 @@ export async function analyze(service, testResults, repoPaths, date) {
     ...structured,
     serviceId: service.id,
     displayName: service.displayName,
+    provider,
     costUsd,
     generatedAt: new Date().toISOString(),
   };

@@ -31,12 +31,25 @@ export const ServiceSchema = z.object({
 
   agent: z.object({
     /**
+     * Which agent runner to use.
+     * 'claude' → @anthropic-ai/claude-agent-sdk (requires ANTHROPIC_API_KEY)
+     * 'openai' → openai SDK with function tools (requires OPENAI_API_KEY)
+     */
+    provider: z.enum(['claude', 'openai']).default('claude'),
+
+    /**
      * Phase 1: plain string injected into the base prompt as service context.
      * Describe what the service does, what to pay attention to, known flakiness, etc.
      */
     prompt: z.string(),
 
-    model: z.string().default('claude-sonnet-4-20250514'),
+    /**
+     * Model name — interpreted by the chosen provider's runner.
+     * Claude examples : 'claude-sonnet-4-20250514', 'claude-opus-4-6'
+     * OpenAI examples : 'gpt-4o', 'o3', 'o4-mini', 'codex-1'
+     * null → each runner applies its own default
+     */
+    model: z.string().nullable().default(null),
 
     /** Max agentic turns (tool-call round trips) before the agent stops */
     maxTurns: z.number().int().positive().default(15),

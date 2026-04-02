@@ -33,17 +33,23 @@ export default {
   },
 
   agent: {
-    // Describe the service so Claude has context when analysing failures.
+    // 'claude' (default) or 'openai'
+    provider: 'claude',
+
+    // Describe the service so the agent has context when analysing failures.
     // Mention known flakiness, critical test areas, team conventions, etc.
     prompt: `This service handles [describe what it does].
 Pay special attention to [important test areas].
 Known flaky tests: [list any if applicable].`,
 
-    model: 'claude-sonnet-4-20250514',
+    // null = runner picks its own default:
+    //   claude provider → claude-sonnet-4-20250514
+    //   openai provider → gpt-4o
+    model: null,
     maxTurns: 15,
     maxBudgetUsd: 0.50,
 
-    // Set to true to let Claude write fixes and open a PR automatically
+    // Set to true to let the agent write fixes and open a PR automatically
     createFixBranch: false,
   },
 
