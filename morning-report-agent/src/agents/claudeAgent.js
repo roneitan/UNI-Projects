@@ -115,9 +115,9 @@ export async function analyze(service, testResults, repoPaths, date) {
   return structured;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helpers (exported for unit testing) ─────────────────────────────────────
 
-function buildPrompt(service, testResults) {
+export function buildPrompt(service, testResults) {
   const fixInstructions = service.agent.createFixBranch
     ? `You have Write and Edit tools available.
 If you identify a clear, safe fix for a failing test, apply it directly to the
@@ -133,7 +133,7 @@ Set "fixed": false for all failures.`;
     .replace('{{FIX_INSTRUCTIONS}}', fixInstructions);
 }
 
-function extractJson(text) {
+export function extractJson(text) {
   const match = text.match(/```json\s*([\s\S]*?)\s*```(?=[^`]|$)/);
   if (!match) {
     console.warn('[claudeAgent] No JSON block found in agent output — using fallback');

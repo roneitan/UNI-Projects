@@ -11,7 +11,13 @@
     "start": "node cron.js",
     "dev": "node --watch cron.js",
     "validate": "node -e \"import('./services/registry.js').then(m => m.loadAll().then(s => console.log('Services:', s.map(x => x.id))))\"",
-    "collect": "node -e \"import('./src/collectors/azureCollector.js').then(m => m.collectResults(new Date()))\""
+    "collect": "node -e \"import('./src/collectors/azureCollector.js').then(m => m.collectResults(new Date()))\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.js"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.9"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.89",

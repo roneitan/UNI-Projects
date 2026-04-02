@@ -42,9 +42,9 @@ export async function send(date, results = null) {
   console.log(`[teamsReporter] Report sent for ${dateStr} (${data.length} service(s))`);
 }
 
-// ─── Adaptive Card builder ────────────────────────────────────────────────────
+// ─── Adaptive Card builder (exported for unit testing) ───────────────────────
 
-function buildAdaptiveCard(dateStr, results) {
+export function buildAdaptiveCard(dateStr, results) {
   const total = results.length;
   const passed = results.filter(r => r.status === 'PASSED').length;
   const failed = results.filter(r => r.status === 'FAILED').length;

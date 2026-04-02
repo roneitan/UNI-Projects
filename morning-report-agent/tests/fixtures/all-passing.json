@@ -1,0 +1,18 @@
+{
+  "collectedAt": "2026-03-31T02:00:00.000Z",
+  "serviceId": "api-gateway",
+  "pipelineName": "api-gateway-nightly",
+  "project": "MyProject",
+  "date": "2026-03-30",
+  "runs": [
+    {
+      "id": "5678",
+      "buildNumber": "20260330.2",
+      "result": "succeeded",
+      "startTime": "2026-03-30T22:00:00Z",
+      "finishTime": "2026-03-30T22:04:11Z"
+    }
+  ],
+  "summary": { "total": 120, "passed": 120, "failed": 0, "skipped": 0 },
+  "testResults": []
+}

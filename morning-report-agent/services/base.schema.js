@@ -56,7 +56,7 @@ export const ServiceSchema = z.object({
     failureThreshold: z.number().min(0).max(1).default(0.05),
     /** Teams @mentions to include when this service fails */
     mentionOnFailure: z.array(z.string()).default([]),
-  }).default({}),
+  }).default({ failureThreshold: 0.05, mentionOnFailure: [] }),
 });
 
 /** @typedef {import('zod').infer<typeof ServiceSchema>} Service */
