@@ -1,16 +1,13 @@
 import { simpleGit } from 'simple-git';
 import { existsSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join, resolve } from 'path';
+import { join } from 'path';
 import fse from 'fs-extra';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const REPOS_DIR = resolve(__dirname, '../../repos');
-const WORKSPACES_DIR = resolve(__dirname, '../../workspaces');
+import { REPOS_DIR, WORKSPACES_DIR } from '../paths.js';
 
 /**
  * Deduplication map: repo URL → Promise<localPath>
  * Multiple services pointing at the same repo only trigger one clone/pull.
+ * Cleared at the start of each runAll() so every cron run gets a fresh pull.
  */
 const syncPromises = new Map();
 
@@ -37,7 +34,7 @@ function authedGit(baseDir) {
 /**
  * Ensure the repo is cloned locally and up-to-date.
  * Clones on first call; pulls on subsequent calls.
- * Calls for the same URL are deduplicated.
+ * Calls for the same URL are deduplicated within a single runAll() invocation.
  *
  * @param {{ url: string, branch?: string, subPath?: string|null }} repoConfig
  * @returns {Promise<string>} Absolute path to the (sub)directory within the repo
@@ -65,12 +62,13 @@ async function _syncRepo(url, branch) {
     await git.pull('origin', branch, ['--ff-only']);
   } else {
     console.log(`[gitSync] Cloning ${repoLocalName(url)}`);
-    // Auth via env for clone: embed PAT in URL temporarily, then reset remote
+    // Use http.extraHeader for auth — PAT never appears in the URL, CLI args,
+    // reflog, or .git/config, unlike the https://user:pat@host pattern.
     const pat = process.env.ADO_MCP_AUTH_TOKEN ?? '';
-    const authUrl = url.replace('https://', `https://pat:${pat}@`);
-    await simpleGit().clone(authUrl, localPath, ['--branch', branch]);
-    // Strip the PAT from the stored remote URL
-    await simpleGit(localPath).remote(['set-url', 'origin', url]);
+    const b64 = Buffer.from(`:${pat}`).toString('base64');
+    await simpleGit({
+      config: [`http.extraHeader=Authorization: Basic ${b64}`],
+    }).clone(url, localPath, ['--branch', branch]);
   }
 
   return localPath;
@@ -139,7 +137,9 @@ export async function removeWorktree(repoConfig, worktreePath) {
   }
 }
 
-/** Clear the deduplication cache — useful between test runs. */
+/** Clear the deduplication cache. Called by runAll() at the start of each cron
+ *  run to ensure every invocation triggers a fresh pull, not the cached Promise
+ *  from the previous run. */
 export function clearSyncCache() {
   syncPromises.clear();
 }

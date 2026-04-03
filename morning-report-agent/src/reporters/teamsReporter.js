@@ -1,10 +1,8 @@
 import axios from 'axios';
 import { format, subDays } from 'date-fns';
-import { resolve, join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
 import fse from 'fs-extra';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import { REPORTS_DIR } from '../paths.js';
 
 /**
  * Send the morning Teams report.
@@ -33,11 +31,10 @@ export async function send(date, results = null) {
 
   const card = buildAdaptiveCard(dateStr, data);
 
-  await axios.post(
-    webhookUrl,
-    { type: 'message', attachments: [{ contentType: 'application/vnd.microsoft.card.adaptive', content: card }] },
-    { headers: { 'Content-Type': 'application/json' } },
-  );
+  await postWithRetry(webhookUrl, {
+    type: 'message',
+    attachments: [{ contentType: 'application/vnd.microsoft.card.adaptive', content: card }],
+  });
 
   console.log(`[teamsReporter] Report sent for ${dateStr} (${data.length} service(s))`);
 }
@@ -160,10 +157,44 @@ function serviceRow(r) {
   };
 }
 
+// ─── Teams webhook with retry ─────────────────────────────────────────────────
+
+/**
+ * POST to the Teams webhook with exponential backoff retry.
+ * A transient network blip at 07:00 should not silently drop the morning report.
+ *
+ * @param {string}  url          Incoming webhook URL
+ * @param {object}  payload      Request body
+ * @param {number}  maxAttempts  Default 3
+ */
+async function postWithRetry(url, payload, maxAttempts = 3) {
+  let lastErr;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await axios.post(url, payload, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 10_000, // 10 s — Teams webhook must respond within this window
+      });
+      return;
+    } catch (err) {
+      lastErr = err;
+      if (attempt < maxAttempts) {
+        const delay = 1000 * 2 ** (attempt - 1); // 1 s, 2 s, 4 s
+        console.warn(
+          `[teamsReporter] Webhook attempt ${attempt}/${maxAttempts} failed ` +
+          `(${err.message}) — retrying in ${delay}ms`
+        );
+        await new Promise(r => setTimeout(r, delay));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 // ─── Disk reader for 07:00 job ────────────────────────────────────────────────
 
 async function loadFromDisk(dateStr) {
-  const reportsDir = resolve(__dirname, '../../reports', dateStr);
+  const reportsDir = join(REPORTS_DIR, dateStr);
   if (!await fse.pathExists(reportsDir)) {
     console.warn(`[teamsReporter] Reports directory not found: ${reportsDir}`);
     return [];

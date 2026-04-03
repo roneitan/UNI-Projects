@@ -1,6 +1,7 @@
 import pLimit from 'p-limit';
 import { loadAll } from '../../services/registry.js';
 import { runService } from './runService.js';
+import { clearSyncCache } from '../collectors/gitSync.js';
 
 /**
  * Run all registered services in parallel, capped by MAX_CONCURRENT_AGENTS.
@@ -13,6 +14,10 @@ import { runService } from './runService.js';
  * @returns {Promise<import('./runService.js').ServiceResult[]>}
  */
 export async function runAll(date) {
+  // Reset dedup cache so this run triggers fresh clones/pulls, not cached Promises
+  // from the previous cron invocation (the Map lives for the entire process lifetime).
+  clearSyncCache();
+
   const services = await loadAll();
 
   if (services.length === 0) {

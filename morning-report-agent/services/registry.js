@@ -5,7 +5,8 @@ import { ServiceSchema } from './base.schema.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const SKIP = new Set(['base.schema.js', 'registry.js']);
+// example-service.js contains placeholder URLs that fail Zod validation — skip it.
+const SKIP = new Set(['base.schema.js', 'registry.js', 'example-service.js']);
 
 /**
  * Dynamically imports all service config files in this directory,

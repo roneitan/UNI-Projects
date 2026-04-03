@@ -1,9 +1,8 @@
-import 'dotenv/config';
 import { format, subDays } from 'date-fns';
 import axios from 'axios';
 import { collectForService } from '../collectors/azureCollector.js';
 import * as gitSync from '../collectors/gitSync.js';
-import { analyze } from '../agents/claudeAgent.js';
+import { analyze } from '../agents/agentRouter.js';
 
 /**
  * Full pipeline for a single service:

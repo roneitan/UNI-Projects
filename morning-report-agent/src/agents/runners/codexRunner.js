@@ -1,27 +1,51 @@
 /**
  * OpenAI runner — uses the `openai` SDK with explicit function tools.
  *
- * Implements the same Read / Search / Write surface as the Claude runner
- * via OpenAI function-calling, so the agent can explore the repo and
- * optionally apply fixes.
+ * ── How this runner differs from claudeRunner ────────────────────────────────
+ *
+ * claudeRunner (@anthropic-ai/claude-agent-sdk):
+ *   • Calls query() which runs a FULLY MANAGED agentic loop internally.
+ *   • The SDK executes tools natively (Read, Grep, Glob, Write, Edit) — we
+ *     write zero tool implementation code.
+ *   • isolation: 'worktree' is a first-class SDK feature (automatic git worktree).
+ *   • Cost (total_cost_usd) is returned as a native field on the result message.
+ *   • Our job: iterate the async generator and collect text + cost.
+ *
+ * codexRunner (openai SDK — this file):
+ *   • chat.completions.create() returns ONE response per call — no managed loop.
+ *   • We own the agentic loop (the for...turn loop below).
+ *   • Tools are JSON schemas; the model responds with tool_calls objects.
+ *   • We execute every tool call ourselves (readFileSync, execFileSync grep/find)
+ *     and push results back into messages[] before the next API call.
+ *   • Cost is NOT returned by the API — we estimate it from token counts against
+ *     a hardcoded pricing table.
+ *   • We own 100% of path safety — hence the safePath() guard below.
+ *
+ * The interface exposed to the rest of the system is identical for both:
+ *   run(prompt, repoPaths, options) → Promise<{ fullText, costUsd }>
  *
  * Compatible with: gpt-4o, gpt-4o-mini, o3, o4-mini, codex-1, and any
  * other model served through the OpenAI API that supports tool use.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 
 import OpenAI from 'openai';
 import { readFileSync, readdirSync, writeFileSync, statSync } from 'fs';
 import { execFileSync } from 'child_process';
-import { resolve, join, relative } from 'path';
+import { resolve, join, relative, sep } from 'path';
 
 const DEFAULT_MODEL = 'gpt-4o';
-// o-series models need slightly different params
+// o-series models use different sampling parameters
 const O_SERIES = new Set(['o1', 'o3', 'o3-mini', 'o4-mini', 'o1-mini', 'o1-preview']);
+
+// 512 KB — large enough for any realistic source file, small enough to protect
+// the context window from binaries, minified bundles, or generated files.
+const MAX_FILE_BYTES = 512 * 1024;
 
 /**
  * @param {string} prompt
- * @param {{ automation: string, service: string|null }} repoPaths
- * @param {{ model: string|null, maxTurns: number, createFixBranch: boolean }} options
+ * @param {{ automation: string, service: string|null, useWorktreeIsolation: boolean }} repoPaths
+ * @param {{ model: string|null, maxTurns: number, maxBudgetUsd: number, createFixBranch: boolean }} options
  * @returns {Promise<{ fullText: string, costUsd: number|null }>}
  */
 export async function run(prompt, repoPaths, options) {
@@ -45,9 +69,9 @@ export async function run(prompt, repoPaths, options) {
       tool_choice: 'auto',
     };
 
-    // o-series models don't accept temperature or system role in the same way
+    // o-series models don't accept tool_choice in the same way
     if (O_SERIES.has(model)) {
-      delete params.tool_choice; // auto is default
+      delete params.tool_choice; // 'auto' is the default anyway
     }
 
     const response = await client.chat.completions.create(params);
@@ -59,8 +83,21 @@ export async function run(prompt, repoPaths, options) {
     if (message.content) fullText += message.content + '\n';
 
     if (response.usage) {
-      totalInputTokens += response.usage.prompt_tokens ?? 0;
+      totalInputTokens  += response.usage.prompt_tokens  ?? 0;
       totalOutputTokens += response.usage.completion_tokens ?? 0;
+    }
+
+    // ── Budget guard (#5) ───────────────────────────────────────────────────
+    // Estimate running cost after each turn and stop early if the configured
+    // ceiling is reached. The Claude runner enforces this natively via maxBudgetUsd;
+    // we must do it manually here.
+    const runningCost = estimateCost(model, totalInputTokens, totalOutputTokens);
+    if (runningCost >= options.maxBudgetUsd) {
+      console.warn(
+        `[codexRunner] Budget $${options.maxBudgetUsd.toFixed(2)} reached ` +
+        `after turn ${turn + 1} (est. $${runningCost.toFixed(4)}) — stopping early`
+      );
+      break;
     }
 
     // No tool calls or model decided to stop
@@ -91,7 +128,7 @@ function buildTools(repoPaths, createFixBranch) {
       type: 'function',
       function: {
         name: 'read_file',
-        description: 'Read the full contents of a file in the repository.',
+        description: `Read the contents of a file in the repository. Files larger than ${MAX_FILE_BYTES / 1024} KB are rejected — use search_files to locate specific sections instead.`,
         parameters: {
           type: 'object',
           properties: {
@@ -187,6 +224,15 @@ function executeTool(toolCall, repoPaths) {
       case 'read_file': {
         const full = safePath(base, args.path);
         if (!full) return 'Error: path is outside the repository';
+        // ── File size cap (#6) ──────────────────────────────────────────────
+        // Reject large files before reading to protect the context window.
+        const stat = statSync(full);
+        if (stat.size > MAX_FILE_BYTES) {
+          return (
+            `Error: file too large (${(stat.size / 1024).toFixed(0)} KB, ` +
+            `limit ${MAX_FILE_BYTES / 1024} KB) — use search_files to locate specific sections`
+          );
+        }
         return readFileSync(full, 'utf-8');
       }
 
@@ -248,16 +294,22 @@ function executeTool(toolCall, repoPaths) {
 
 /**
  * Resolve a user-supplied path relative to `base` and verify it stays inside.
- * Returns null if the resolved path escapes the base directory.
+ * Returns null if the resolved path would escape the base directory.
+ *
+ * Uses path.sep in the prefix check to prevent the following attack:
+ *   base = /repos/my-repo
+ *   path = ../my-repo-evil/secret.txt
+ *   resolved = /repos/my-repo-evil/secret.txt   ← starts with base but escapes!
  */
 function safePath(base, userPath) {
   const resolved = resolve(base, userPath);
-  return resolved.startsWith(base) ? resolved : null;
+  return (resolved === base || resolved.startsWith(base + sep)) ? resolved : null;
 }
 
 // ─── Cost estimation ──────────────────────────────────────────────────────────
 
-// Approximate pricing per 1M tokens (input / output) as of early 2026
+// Approximate pricing per 1M tokens (input / output) as of early 2026.
+// Update this table when OpenAI publishes new pricing.
 const PRICING = {
   'gpt-4o':        [2.50,  10.00],
   'gpt-4o-mini':   [0.15,   0.60],

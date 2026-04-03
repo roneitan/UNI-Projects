@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { extractJson, buildPrompt } from '../../src/agents/claudeAgent.js';
+import { extractJson, buildPrompt } from '../../src/agents/agentRouter.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixture = JSON.parse(
